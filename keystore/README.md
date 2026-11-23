@@ -18,7 +18,10 @@ GitHub Actions 每次都在全新 runner 上构建，`~/.android/debug.keystore`
 | keystore 密码 | `android` |
 | key alias | `androiddebugkey` |
 | key 密码 | `android` |
-| 证书 SHA-256 | 首次构建后由构建日志 `### Signing certificate` 打印，补录于此 |
+| 证书 SHA-256 | `ef:ca:a7:02:d4:6d:b1:15:e7:bc:bb:66:10:16:52:f2:7d:41:c2:69:61:c5:64:8c:d4:8f:4b:08:c3:8a:4c:dc` |
+| 证书 SHA-1 | `17:2C:CC:A4:73:70:F7:C0:E3:98:DB:A0:E3:C6:F5:C6:B2:0F:8E:DC` |
+| Subject | `C=US, O=Android, CN=Android Debug` |
+| 有效期 | 2025-02-01 → 2055-01-25（30 年） |
 
 密码沿用 Android 的 debug 约定（`android` / `androiddebugkey`），所以本地 Android Studio 与命令行 `./gradlew` 都不用改 `app/build.gradle.kts`，也不会因为缺一份 `keystore.properties` 而构建失败。
 
