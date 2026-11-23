@@ -53,7 +53,7 @@ jobs:
           cp app/build/outputs/apk/debug/app-debug.apk "dist/test-apk/${task_apk_name}"
           (cd dist/test-apk && sha256sum *.apk > SHA256SUMS.txt)
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs \
-            "dist/test-apk/${task_apk_name}.apk" > "dist/test-apk/CERTS.txt"
+            "dist/test-apk/${task_apk_name}" > "dist/test-apk/CERTS.txt"
           {
             printf '%s\n' '## Mika Dev test APK'
             printf '%s\n' 'Download the Mika-Dev artifact below, unzip it, and install the APK.'
