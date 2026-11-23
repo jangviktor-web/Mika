@@ -39,13 +39,23 @@ jobs:
       - name: Pin the debug signing key
         run: |
           set -euo pipefail
-          mkdir -p "$HOME/.android"
-          cp keystore/mika-dev-debug.keystore "$HOME/.android/debug.keystore"
-          chmod 600 "$HOME/.android/debug.keystore"
-          echo "HOME=$HOME"
-          echo "keystore copied to: $HOME/.android/debug.keystore"
-          sha256sum "$HOME/.android/debug.keystore"
-          sha256sum keystore/mika-dev-debug.keystore
+          # AGP looks for the debug keystore under $XDG_CONFIG_HOME/.android (NOT ~/.android
+          # on these runners) and expects the alias AndroidDebugKey, while the checked-in
+          # keystore carries the classic androiddebugkey alias. Re-encode it with the alias
+          # AGP asks for, keeping the same key pair and certificate.
+          prefs="${XDG_CONFIG_HOME:-$HOME/.config}/.android"
+          mkdir -p "$prefs" "$HOME/.android"
+          src="keystore/mika-dev-debug.keystore"
+          src_alias=$(keytool -list -keystore "$src" -storepass android 2>/dev/null | grep -m1 'PrivateKeyEntry' | cut -d',' -f1)
+          echo "source alias: [$src_alias]"
+          keytool -importkeystore \
+            -srckeystore "$src" -srcstoretype PKCS12 -srcstorepass android \
+            -srcalias "$src_alias" -srckeypass android \
+            -destkeystore "$prefs/debug.keystore" -deststoretype PKCS12 \
+            -deststorepass android -destkeypass android \
+            -destalias AndroidDebugKey -noprompt
+          cp "$prefs/debug.keystore" "$HOME/.android/debug.keystore"
+          sha256sum "$prefs/debug.keystore"
       - name: Report signing configuration
         run: ./gradlew :app:signingReport --stacktrace
       - name: Unit tests and independent test APK
