@@ -42,6 +42,12 @@ jobs:
           mkdir -p "$HOME/.android"
           cp keystore/mika-dev-debug.keystore "$HOME/.android/debug.keystore"
           chmod 600 "$HOME/.android/debug.keystore"
+          echo "HOME=$HOME"
+          echo "keystore copied to: $HOME/.android/debug.keystore"
+          sha256sum "$HOME/.android/debug.keystore"
+          sha256sum keystore/mika-dev-debug.keystore
+      - name: Report signing configuration
+        run: ./gradlew :app:signingReport --stacktrace
       - name: Unit tests and independent test APK
         run: ./gradlew :app:testDebugUnitTest :app:assembleDebug -PdevInstall --stacktrace
       - name: Prepare download
