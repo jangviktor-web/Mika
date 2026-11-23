@@ -37,6 +37,26 @@ chmod 600 ~/.android/debug.keystore
 
 Windows 上是 `C:\Users\<name>\.android\debug.keystore`。
 
+## AGP 实际读取的位置（踩过的坑）
+
+`./gradlew :app:signingReport` 显示 AGP 读的是 `$XDG_CONFIG_HOME/.android/debug.keystore`（GitHub runner 上是 `/home/runner/.config/.android/debug.keystore`），**不是** `~/.android/debug.keystore`；它期望的别名是 `AndroidDebugKey`，而这份 keystore 里是 `androiddebugkey`。路径或别名任一不匹配，AGP 就会在构建时现场生成一份新的随机密钥，表现就是**每个构建的签名都不一样**。
+
+所以 workflow 用 keytool 把证书按 `AndroidDebugKey` 别名重新编码到 AGP 真正读的位置（密钥对与证书不变，只是 store 重新封装）：
+
+```bash
+prefs="${XDG_CONFIG_HOME:-$HOME/.config}/.android"
+mkdir -p "$prefs"
+keytool -importkeystore \
+  -srckeystore keystore/mika-dev-debug.keystore -srcstoretype PKCS12 -srcstorepass android \
+  -srcalias androiddebugkey -srckeypass android \
+  -destkeystore "$prefs/debug.keystore" -deststoretype PKCS12 \
+  -deststorepass android -destkeypass android -destalias AndroidDebugKey -noprompt
+```
+
+## 怎么核对
+
+每次构建看 Actions 页面 run summary 里的 `### Signing certificate`，SHA-256 必须恒为 `EF:CA:A7:02:…:4C:DC`；或者本地跑 `./gradlew :app:signingReport` 看 `SHA-256` 一行。
+
 ## 警告
 
 这是 **debug 证书**，不是发布证书。仓库是公开的，拿到它的人可以签出同样包名 `com.wangzan101.mika.dev` 的 APK，因此：
