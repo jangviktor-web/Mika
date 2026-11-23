@@ -23,6 +23,14 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
         with:
           cache-provider: basic
+      # Keep the signing certificate identical across builds, so a newer APK
+      # overwrites the previous one instead of failing with SIGNATURE MISMATCH.
+      - name: Pin the debug signing key
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.android"
+          cp keystore/mika-dev-debug.keystore "$HOME/.android/debug.keystore"
+          chmod 600 "$HOME/.android/debug.keystore"
       - name: Test and build side-by-side debug APK
         run: ./gradlew :app:testDebugUnitTest :app:assembleDebug -PdevInstall --stacktrace
       - uses: actions/upload-artifact@v7
